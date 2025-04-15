@@ -4,22 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Login</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-black text-white font-poppins">
+<body>
+  <!-- Login form with glassmorphism effect -->
   <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="bg-gray-800 bg-opacity-50 p-8 rounded-xl shadow-2xl max-w-md w-full animate-slide-up">
+    <div class="form-container max-w-md w-full animate-slide-up">
       <h2 class="text-3xl font-bold mb-6 text-center">Student Login</h2>
-      <form id="student-login-form">
+      <form id="student-login-form" aria-label="Student login form">
         <div class="mb-4">
-          <input type="email" name="email" placeholder="Email" required
-            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+          <input type="email" name="email" placeholder="Email" required aria-describedby="error">
         </div>
         <div class="mb-6">
-          <input type="password" name="password" placeholder="Password" required
-            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+          <input type="password" name="password" placeholder="Password" required aria-describedby="error">
         </div>
         <button type="submit" class="btn-primary w-full">Login</button>
       </form>
@@ -27,22 +26,17 @@
     </div>
   </div>
   <script>
-    document.getElementById('student-login-form').addEventListener('submit', async (e) => {
+    // Simulate login
+    document.getElementById('student-login-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const response = await fetch('/student-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.get('email'), password: formData.get('password') }),
-      });
-      const result = await response.json();
-      if (result.redirect) {
-        window.location.href = result.redirect;
+      const email = e.target.email.value;
+      if (email) {
+        localStorage.setItem('user', JSON.stringify({ role: 'student', email }));
+        window.location.href = 'dashboard.html';
       } else {
-        document.getElementById('error').innerText = result.error;
+        document.getElementById('error').innerText = 'Please enter a valid email';
       }
     });
   </script>
-  <script src="scripts.js"></script>
 </body>
 </html>
