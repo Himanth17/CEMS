@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Event</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-black text-white font-poppins">
+  <div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="bg-gray-800 bg-opacity-50 p-8 rounded-xl shadow-2xl max-w-lg w-full animate-slide-up">
+      <h2 class="text-3xl font-bold mb-6 text-center">Book an Event</h2>
+      <form id="event-form">
+        <div class="mb-4">
+          <input type="text" name="name" placeholder="Event Name" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+        </div>
+        <div class="mb-4">
+          <input type="date" name="date" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+        </div>
+        <div class="mb-4">
+          <input type="time" name="time" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+        </div>
+        <div class="mb-4">
+          <select name="venue" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+            <option value="auditorium">Auditorium</option>
+            <option value="garden">Garden</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <input type="text" name="chief_guest" placeholder="Chief Guest" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+        </div>
+        <div class="mb-4">
+          <input type="number" name="audience_limit" max="200" placeholder="Audience Limit" required
+            class="w-full p-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all">
+        </div>
+        <button type="button" onclick="checkSlot()" class="btn-secondary w-full">Check Availability</button>
+      </form>
+      <p id="status" class="mt-4 text-center"></p>
+      <p class="mt-4 text-gray-300"><strong>Guidelines:</strong> No food in auditorium, events end by 10 PM.</p>
+      <button id="pay-button" class="btn-primary w-full mt-4 hidden">Pay Now</button>
+    </div>
+  </div>
+  <script>
+    const stripe = Stripe('your-stripe-publishable-key');
+    async function checkSlot() {
+      const form = document.getElementById('event-form');
+      const formData = new FormData(form);
+      const response = await fetch('/api/check-slot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: formData.get('date'),
+          time: formData.get('time'),
+          venue: formData.get('venue'),
+        }),
+      });
+      const result = await response.json();
+      const status = document.getElementById('status');
+      status.innerText = result.status === 'booked' ? 'Slot Unavailable' : 'Slot Available';
+      if (result.status === 'available') {
+        document.getElementById('pay-button').classList.remove('hidden');
+        localStorage.setItem('event-form-data', JSON.stringify(Object.fromEntries(formData)));
+      }
+    }
+
+    document.getElementById('pay-button').addEventListener('click', async () => {
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const { id } = await response.json();
+      stripe.redirectToCheckout({ sessionId: id });
+    });
+
+    if (window.location.search.includes('success')) {
+      const formData = JSON.parse(localStorage.getItem('event-form-data'));
+      fetch('/api/create-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          date: formData.date,
+          time: formData.time,
+          venue: formData.venue,
+          chief_guest: formData.chief_guest,
+          audience_limit: formData.audience_limit,
+          user_id: 'current-user-id', // Replace with Supabase auth user ID
+        }),
+      }).then(() => window.location.href = 'success.html');
+    }
+  </script>
+  <script src="scripts.js"></script>
+</body>
+</html>
