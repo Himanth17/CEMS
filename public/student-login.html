@@ -14,6 +14,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      defer
+    ></script>
   </head>
   <body>
     <nav class="navbar">
@@ -53,6 +57,13 @@
             Access Portal
           </button>
         </form>
+        <button id="google-signin" class="btn-google w-full mt-4">
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google logo"
+          />
+          Sign in with Google
+        </button>
         <p id="error" class="text-red-400 mt-4 text-center"></p>
       </div>
     </div>
@@ -61,28 +72,168 @@
       <a href="#">Contact</a>
       <a href="#">Privacy</a>
     </footer>
-    <script>
-      document
-        .getElementById("student-login-form")
-        .addEventListener("submit", (e) => {
+    <script type="module">
+      // Firebase imports
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        signInWithPopup,
+        GoogleAuthProvider,
+      } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
+        authDomain: "cems-6ff22.firebaseapp.com",
+        projectId: "cems-6ff22",
+        storageBucket: "cems-6ff22.firebasestorage.app",
+        messagingSenderId: "305415477433",
+        appId: "1:305415477433:web:e3ae59ca98930116e36368",
+        measurementId: "G-XE9WSDWLKY",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const googleProvider = new GoogleAuthProvider();
+
+      // Auth functions
+      async function signInWithEmail(email, password, role, errorEl) {
+        try {
+          console.log("Attempting email login:", email);
+          errorEl.innerText = "Logging in...";
+          const userCredential = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+          const user = userCredential.user;
+
+          // Check/set user role in Firestore
+          const userDocRef = doc(db, "users", user.uid);
+          let userDoc = await getDoc(userDocRef).catch((err) => {
+            console.error("Firestore read error:", err);
+            return null;
+          });
+
+          if (!userDoc || !userDoc.exists()) {
+            console.log("No user doc found, creating with role:", role);
+            await setDoc(userDocRef, { email: user.email, role }).catch(
+              (err) => {
+                console.error("Firestore write error:", err);
+              }
+            );
+          } else if (userDoc.data().role !== role) {
+            throw new Error(
+              `This account is registered as a ${
+                userDoc.data().role
+              }, not ${role}`
+            );
+          }
+
+          console.log("Login successful, redirecting to dashboard");
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ email: user.email, role })
+          );
+          window.location.href = "dashboard.html";
+        } catch (error) {
+          console.error("Email login error:", error.code, error.message);
+          switch (error.code) {
+            case "auth/user-not-found":
+              errorEl.innerText = "No account found with this email";
+              break;
+            case "auth/wrong-password":
+              errorEl.innerText = "Incorrect password";
+              break;
+            case "auth/invalid-email":
+              errorEl.innerText = "Invalid email format";
+              break;
+            default:
+              errorEl.innerText = error.message || "Login failed";
+          }
+        }
+      }
+
+      async function signInWithGoogle(role, errorEl) {
+        try {
+          console.log("Attempting Google Sign-In");
+          errorEl.innerText = "Logging in...";
+          const result = await signInWithPopup(auth, googleProvider);
+          const user = result.user;
+
+          // Check/set user role in Firestore
+          const userDocRef = doc(db, "users", user.uid);
+          let userDoc = await getDoc(userDocRef).catch((err) => {
+            console.error("Firestore read error:", err);
+            return null;
+          });
+
+          if (!userDoc || !userDoc.exists()) {
+            console.log("No user doc found, creating with role:", role);
+            await setDoc(userDocRef, { email: user.email, role }).catch(
+              (err) => {
+                console.error("Firestore write error:", err);
+              }
+            );
+          } else if (userDoc.data().role !== role) {
+            throw new Error(
+              `This account is registered as a ${
+                userDoc.data().role
+              }, not ${role}`
+            );
+          }
+
+          console.log("Google login successful, redirecting to dashboard");
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ email: user.email, role })
+          );
+          window.location.href = "dashboard.html";
+        } catch (error) {
+          console.error("Google login error:", error.code, error.message);
+          errorEl.innerText = error.message || "Google Sign-In failed";
+        }
+      }
+
+      // Event listeners
+      const loginForm = document.getElementById("student-login-form");
+      const googleButton = document.getElementById("google-signin");
+      const errorEl = document.getElementById("error");
+
+      if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
           e.preventDefault();
-          const form = e.target;
-          const email = form.email.value;
-          const error = document.getElementById("error");
-          error.innerText = "Logging in...";
-          setTimeout(() => {
-            if (form.checkValidity()) {
-              localStorage.setItem(
-                "user",
-                JSON.stringify({ role: "student", email })
-              );
-              window.location.href = "dashboard.html";
-            } else {
-              error.innerText =
-                "Please enter a valid email and password (min 6 characters)";
-            }
-          }, 1000);
+          const email = loginForm.email.value;
+          const password = loginForm.password.value;
+          if (loginForm.checkValidity()) {
+            signInWithEmail(email, password, "student", errorEl);
+          } else {
+            errorEl.innerText =
+              "Please enter a valid email and password (min 6 characters)";
+          }
         });
+      } else {
+        console.error("Student login form not found");
+      }
+
+      if (googleButton) {
+        googleButton.addEventListener("click", () => {
+          console.log("Google Sign-In button clicked");
+          signInWithGoogle("student", errorEl);
+        });
+      } else {
+        console.error("Google Sign-In button not found");
+      }
     </script>
+    <script src="scripts.js"></script>
   </body>
 </html>

@@ -26,12 +26,17 @@
         <a href="student-login.html">Student Portal</a>
         <a href="faculty-login.html">Faculty Portal</a>
         <button class="theme-toggle">🌙</button>
+        <button id="logout" class="btn-secondary">Logout</button>
       </div>
     </nav>
     <div id="particles"></div>
     <div class="container py-12">
       <div class="mb-6 animate-card">
-        <h1 class="text-2xl">Welcome, <span id="user-info">User</span></h1>
+        <h1 class="text-2xl">
+          Welcome, <span id="user-info">User</span> (<span id="user-role"
+            >Role</span
+          >)
+        </h1>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="event-card animate-card">
@@ -54,10 +59,40 @@
       <a href="#">Contact</a>
       <a href="#">Privacy</a>
     </footer>
-    <script src="scripts.js"></script>
-    <script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import {
+        getAuth,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
+        authDomain: "cems-6ff22.firebaseapp.com",
+        projectId: "cems-6ff22",
+        storageBucket: "cems-6ff22.firebasestorage.app",
+        messagingSenderId: "305415477433",
+        appId: "1:305415477433:web:e3ae59ca98930116e36368",
+        measurementId: "G-XE9WSDWLKY",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       document.getElementById("user-info").textContent = user.email || "User";
+      document.getElementById("user-role").textContent = user.role || "Unknown";
+
+      document.getElementById("logout").addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          localStorage.removeItem("user");
+          window.location.href = "index.html";
+        } catch (error) {
+          console.error("Logout error:", error);
+        }
+      });
     </script>
+    <script src="scripts.js"></script>
   </body>
 </html>

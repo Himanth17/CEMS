@@ -330,3 +330,38 @@ footer a {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+/* Add to the end of styles.css */
+
+/* Google Sign-In button */
+.btn-google {
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-google:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-google .ripple {
+  background: rgba(0, 0, 0, 0.2);
+}
