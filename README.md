@@ -5,6 +5,7 @@ A futuristic, professional frontend for managing college events, built with HTML
 ## Setup
 
 1. **Create Project Locally**:
+
    - Create a folder at `D:\Special Project\CEMS`.
    - Inside it, create a `/public` folder.
    - Add the provided files (`index.html`, `styles.css`, etc.) to `/public`.
@@ -20,3 +21,4 @@ A futuristic, professional frontend for managing college events, built with HTML
      npm install -g serve
      cd D:\Special Project\CEMS
      serve public
+     ```
