@@ -60,46 +60,132 @@
       </div>
     </section>
 
+    <!-- About Section -->
+    <section class="py-12">
+      <div class="form-container animate-card">
+        <h2 class="text-2xl mb-6 text-center">About IFHE</h2>
+        <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management. Donthanpalle, Telangana 501203</p>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-12">
+      <div class="form-container animate-card text-center">
+        <h2 class="text-2xl mb-6">Contact Details</h2>
+        <img src="https://via.placeholder.com/100" alt="Mendu Himanth Profile" class="profile-photo mb-4">
+        <p><strong>Name:</strong> Mendu Himanth</p>
+        <p><strong>Contact Number:</strong> 8374607486</p>
+        <p><strong>Email:</strong> menduhimanth22@ifheindia.org</p>
+      </div>
+    </section>
+
     <!-- Previous Event Highlights Section -->
-    <section id="highlights" class="py-12">
+    <section class="py-12">
       <h2 class="text-2xl mb-6 text-center">Previous Event Highlights</h2>
       <div class="grid grid-cols-3 gap-4">
         <div class="highlight-card animate-card">
           <h3 class="text-lg">Tech Symposium 2024</h3>
           <p>Placeholder for event media (awaiting Google Drive link).</p>
+          <a href="https://drive.google.com" target="_blank" class="btn-primary mt-4">View Highlights</a>
         </div>
         <div class="highlight-card animate-card">
           <h3 class="text-lg">Cultural Fest 2024</h3>
           <p>Placeholder for event media (awaiting Google Drive link).</p>
+          <a href="https://drive.google.com" target="_blank" class="btn-primary mt-4">View Highlights</a>
         </div>
         <div class="highlight-card animate-card">
           <h3 class="text-lg">Sports Day 2024</h3>
           <p>Placeholder for event media (awaiting Google Drive link).</p>
+          <a href="https://drive.google.com" target="_blank" class="btn-primary mt-4">View Highlights</a>
         </div>
       </div>
     </section>
   </div>
 
-  <footer>
-    <a href="#" id="about-link">About</a>
-    <a href="#" id="contact-link">Contact</a>
-    <a href="#highlights" id="highlights-link">Previous Event Highlights</a>
+  <style>
+    .footer {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem;
+      background-color: #f3f4f6;
+      position: relative;
+    }
+  
+    .footer-link {
+      position: relative;
+      font-weight: 600;
+      color: #4f46e5;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+  
+    .tooltip-content {
+      display: none;
+      position: absolute;
+      bottom: 150%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+  
+    .footer-link:hover + .tooltip-content {
+      display: block;
+      animation: slideUp 0.3s ease-out;
+    }
+  
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 10px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+  
+    .tooltip-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+  
+  <footer class="footer">
+    <!-- About Tooltip -->
+    <div style="position: relative;">
+      <a class="footer-link">About</a>
+      <div class="tooltip-content">
+        <strong>IFHE (ICFAI FOUNDATION FOR HIGHER EDUCATION)</strong><br><br>
+        The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management.<br>
+        Donthanpalle, Telangana 501203.
+      </div>
+    </div>
+  
+    <!-- Contact Tooltip -->
+    <div style="display: inline-block; position: relative;">
+      <a class="footer-link">Contact</a>
+      <div class="tooltip-content text-center">
+        <img src="https://drive.google.com/uc?export=view&id=1uT-nIQB8r473Z-iU6cBUUbq_zqrByCh8" alt="Mendu Himanth" class="profile-photo mb-2">
+        <p><strong>Name:</strong> Mendu Himanth</p>
+        <p><strong>Contact Number:</strong> 8374607486</p>
+        <p><strong>Email:</strong> menduhimanth22@ifheindia.org</p>
+      </div>
+    </div>
   </footer>
-
-  <!-- About Popup -->
-  <div id="about-popup" class="popup">
-    <h3 class="text-lg mb-2">About IFHE</h3>
-    <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management. Donthanpalle, Telangana 501203</p>
-  </div>
-
-  <!-- Contact Popup -->
-  <div id="contact-popup" class="popup">
-    <img src="https://drive.google.com/file/d/1uT-nIQB8r473Z-iU6cBUUbq_zqrByCh8/view?usp=sharing" alt="Mendu Himanth Profile" class="profile-photo mb-2">
-    <h3 class="text-lg mb-2">Contact Details</h3>
-    <p><strong>Name:</strong> Mendu Himanth</p>
-    <p><strong>Contact Number:</strong> 8374607486</p>
-    <p><strong>Email:</strong> menduhimanth22@ifheindia.org</p>
-  </div>
+  
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
