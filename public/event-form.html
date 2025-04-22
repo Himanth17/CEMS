@@ -26,6 +26,7 @@
         <a href="student-login.html">Student Portal</a>
         <a href="faculty-login.html">Faculty Portal</a>
         <button class="theme-toggle">🌙</button>
+        <button id="logout" class="btn-secondary">Logout</button>
       </div>
     </nav>
     <div id="particles"></div>
@@ -50,6 +51,7 @@
           </div>
           <div class="mb-4">
             <select name="venue" required>
+              <option value="" disabled selected>Select Venue</option>
               <option value="auditorium">Auditorium</option>
               <option value="garden">Garden</option>
             </select>
@@ -73,6 +75,16 @@
               required
             />
           </div>
+          <div class="mb-4">
+            <select name="club" required>
+              <option value="" disabled selected>Select Club</option>
+              <option value="CLAP IN">CLAP IN</option>
+              <option value="ASANA">ASANA</option>
+              <option value="YANTRIKEE">YANTRIKEE</option>
+              <option value="GAMBOL">GAMBOL</option>
+              <option value="GDG">GDG</option>
+            </select>
+          </div>
           <button type="submit" class="btn-secondary w-full">
             Check Availability
           </button>
@@ -88,12 +100,49 @@
       </div>
     </div>
     <footer>
-      <a href="#">About</a>
-      <a href="#">Contact</a>
-      <a href="#">Privacy</a>
+      <a href="about.html" class="footer-link">About</a>
+      <a href="contact.html" class="footer-link">Contact</a>
+      <a href="highlights.html" class="footer-link">Previous Event Highlights</a>
     </footer>
-    <script src="scripts.js"></script>
-    <script>
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
+      import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+      import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
+        authDomain: "cems-6ff22.firebaseapp.com",
+        projectId: "cems-6ff22",
+        storageBucket: "cems-6ff22.firebasestorage.app",
+        messagingSenderId: "305415477433",
+        appId: "1:305415477433:web:e3ae59ca98930116e36368",
+        measurementId: "G-XE9WSDWLKY"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Check auth state
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          document.getElementById('status').innerText = 'Please log in to book an event.';
+          window.location.href = 'student-login.html';
+        }
+      });
+
+      // Logout
+      document.getElementById('logout').addEventListener('click', async () => {
+        try {
+          await signOut(auth);
+          localStorage.removeItem('user');
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          document.getElementById('status').innerText = 'Error logging out';
+        }
+      });
+
       document.getElementById("event-form").addEventListener("submit", (e) => {
         e.preventDefault();
         const form = e.target;
@@ -106,9 +155,41 @@
         }
       });
 
-      document.getElementById("pay-button").addEventListener("click", () => {
-        window.location.href = "success.html";
+      document.getElementById("pay-button").addEventListener("click", async () => {
+        try {
+          const formDataRaw = localStorage.getItem('event-form-data');
+          if (!formDataRaw) {
+            throw new Error('No event data found. Please check availability again.');
+          }
+          const formData = JSON.parse(formDataRaw);
+          if (!formData.name || !formData.date || !formData.time || !formData.venue || !formData.chief_guest || !formData.audience_limit || !formData.club) {
+            throw new Error('Incomplete event data. Please check availability again.');
+          }
+          const user = auth.currentUser;
+          if (!user) {
+            throw new Error('User not authenticated. Please log in again.');
+          }
+          // Save to Firestore
+          const bookingData = {
+            ...formData,
+            bookedAt: new Date().toISOString(),
+            status: "confirmed",
+            userId: user.uid
+          };
+          await addDoc(collection(db, "bookings"), bookingData);
+          
+          // Clear localStorage
+          localStorage.removeItem('event-form-data');
+          
+          // Update UI
+          document.getElementById('status').innerText = 'Booking Confirmed! View details on your dashboard.';
+          document.getElementById('pay-button').classList.add('hidden');
+        } catch (error) {
+          console.error("Error confirming booking:", error.message, error.stack);
+          document.getElementById("status").innerText = `Error confirming booking: ${error.message}`;
+        }
       });
     </script>
+    <script src="scripts.js"></script>
   </body>
 </html>

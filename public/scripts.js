@@ -23,25 +23,25 @@ function rotateTaglines() {
     'Unleash Epic Moments',
     'Your Events, Elevated'
   ];
-  const taglineEl = document.querySelector('.tagline');
-  if (!taglineEl) return;
+  const tagheroEl = document.querySelector('.taghero');
+  if (!tagheroEl) return;
   let index = 0;
-  gsap.to(taglineEl, {
+  gsap.to(tagheroEl, {
     opacity: 0,
     duration: 0.5,
     onComplete: () => {
-      taglineEl.textContent = taglines[index];
-      gsap.to(taglineEl, { opacity: 1, duration: 0.5 });
+      tagheroEl.textContent = taglines[index];
+      gsap.to(tagheroEl, { opacity: 1, duration: 0.5 });
       index = (index + 1) % taglines.length;
     }
   });
   setInterval(() => {
-    gsap.to(taglineEl, {
+    gsap.to(tagheroEl, {
       opacity: 0,
       duration: 0.5,
       onComplete: () => {
-        taglineEl.textContent = taglines[index];
-        gsap.to(taglineEl, { opacity: 1, duration: 0.5 });
+        tagheroEl.textContent = taglines[index];
+        gsap.to(tagheroEl, { opacity: 1, duration: 0.5 });
         index = (index + 1) % taglines.length;
       }
     });
@@ -147,12 +147,18 @@ function checkSlot(formData) {
   try {
     const status = document.getElementById('status');
     status.innerText = 'Checking...';
+    console.log('Checking slot for:', formData);
     setTimeout(() => {
-      const isAvailable = Math.random() > 0.5;
+      const isAvailable = Math.random() > 0.5; // Mock availability
       status.innerText = isAvailable ? 'Slot Available' : 'Slot Unavailable';
       if (isAvailable) {
-        document.getElementById('pay-button').classList.remove('hidden');
+        console.log('Slot available, saving formData:', formData);
         localStorage.setItem('event-form-data', JSON.stringify(formData));
+        document.getElementById('pay-button').classList.remove('hidden');
+      } else {
+        console.log('Slot unavailable, clearing formData');
+        localStorage.removeItem('event-form-data');
+        document.getElementById('pay-button').classList.add('hidden');
       }
     }, 1000);
   } catch (error) {

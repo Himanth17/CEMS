@@ -15,6 +15,7 @@
     <div class="flex gap-4">
       <a href="student-login.html">Student Portal</a>
       <a href="faculty-login.html">Faculty Portal</a>
+      <a href="event-form.html">Plan Your Event</a>
       <button class="theme-toggle">🌙</button>
       <button id="logout" class="btn-secondary">Logout</button>
     </div>
@@ -24,17 +25,8 @@
     <div class="mb-6 animate-card">
       <h1 class="text-2xl">Welcome, <span id="user-info">User</span> (<span id="user-role">Role</span>)</h1>
     </div>
-    <div class="grid grid-cols-2 gap-4">
-      <div class="event-card animate-card">
-        <h2 class="text-xl">Tech Fest 2025</h2>
-        <p>Chief Guest: Dr. Jane Doe</p>
-        <p>Date: April 20, 2025</p>
-      </div>
-      <div class="event-card animate-card">
-        <h2 class="text-xl">Cultural Night</h2>
-        <p>Chief Guest: Prof. John Smith</p>
-        <p>Date: April 25, 2025</p>
-      </div>
+    <div id="bookings-container" class="grid grid-cols-2 gap-4">
+      <!-- Bookings will be dynamically inserted here -->
     </div>
     <a href="event-form.html" class="btn-primary mt-6 animate-card">Plan Your Event</a>
 
@@ -57,25 +49,6 @@
         <div class="club-card animate-card">
           <h3 class="text-lg">EDUCATIONAL CLUB: GDG</h3>
         </div>
-      </div>
-    </section>
-
-    <!-- About Section -->
-    <section class="py-12">
-      <div class="form-container animate-card">
-        <h2 class="text-2xl mb-6 text-center">About IFHE</h2>
-        <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management. Donthanpalle, Telangana 501203</p>
-      </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section class="py-12">
-      <div class="form-container animate-card text-center">
-        <h2 class="text-2xl mb-6">Contact Details</h2>
-        <img src="https://via.placeholder.com/100" alt="Mendu Himanth Profile" class="profile-photo mb-4">
-        <p><strong>Name:</strong> Mendu Himanth</p>
-        <p><strong>Contact Number:</strong> 8374607486</p>
-        <p><strong>Email:</strong> menduhimanth22@ifheindia.org</p>
       </div>
     </section>
 
@@ -102,94 +75,32 @@
     </section>
   </div>
 
-  <style>
-    .footer {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      padding: 2rem;
-      background-color: #f3f4f6;
-      position: relative;
-    }
-  
-    .footer-link {
-      position: relative;
-      font-weight: 600;
-      color: #4f46e5;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
-  
-    .tooltip-content {
-      display: none;
-      position: absolute;
-      bottom: 150%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 320px;
-      background-color: #ffffff;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-      font-size: 0.875rem;
-      line-height: 1.4;
-    }
-  
-    .footer-link:hover + .tooltip-content {
-      display: block;
-      animation: slideUp 0.3s ease-out;
-    }
-  
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translate(-50%, 10px);
-      }
-      to {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
-    }
-  
-    .tooltip-photo {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 0.5rem;
-    }
-  </style>
-  
-  <footer class="footer">
-    <!-- About Tooltip -->
-    <div style="position: relative;">
+  <footer>
+    <!-- About -->
+    <div style="display: inline-block; position: relative;">
       <a class="footer-link">About</a>
-      <div class="tooltip-content">
-        <strong>IFHE (ICFAI FOUNDATION FOR HIGHER EDUCATION)</strong><br><br>
-        The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management.<br>
-        Donthanpalle, Telangana 501203.
+      <div class="tooltip-box">
+        <p><strong>IFHE (ICFAI FOUNDATION FOR HIGHER EDUCATION)</strong></p>
+        <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management. Donthanpalle, Telangana 501203.</p>
       </div>
     </div>
   
-    <!-- Contact Tooltip -->
+    <!-- Contact -->
     <div style="display: inline-block; position: relative;">
       <a class="footer-link">Contact</a>
-      <div class="tooltip-content text-center">
-        <img src="https://drive.google.com/uc?export=view&id=1uT-nIQB8r473Z-iU6cBUUbq_zqrByCh8" alt="Mendu Himanth" class="profile-photo mb-2">
-        <p><strong>Name:</strong> Mendu Himanth</p>
+      <div class="tooltip-box text-center">
+        <!-- Replace the src below with your Google Drive link (after confirming sharing settings) or a local image path -->
+        <img src="images\himanth.jpg" alt="Mendu Himanth" class="profile-photo mb-2">        <p><strong>Name:</strong> Mendu Himanth</p>
         <p><strong>Contact Number:</strong> 8374607486</p>
         <p><strong>Email:</strong> menduhimanth22@ifheindia.org</p>
       </div>
     </div>
   </footer>
-  
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
-    import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+    import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
@@ -203,11 +114,58 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    document.getElementById('user-info').textContent = user.email || 'User';
-    document.getElementById('user-role').textContent = user.role || 'Unknown';
+    // Check auth state and display user info
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('user-info').textContent = userData.email || user.email || 'User';
+        document.getElementById('user-role').textContent = userData.role || 'Unknown';
+        
+        // Fetch and display bookings
+        fetchBookings(user.uid);
+      } else {
+        window.location.href = 'student-login.html';
+      }
+    });
 
+    // Fetch bookings from Firestore
+    async function fetchBookings(userId) {
+      try {
+        const bookingsContainer = document.getElementById('bookings-container');
+        bookingsContainer.innerHTML = ''; // Clear existing content
+        
+        const q = query(collection(db, 'bookings'), where('userId', '==', userId), where('status', '==', 'confirmed'));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          bookingsContainer.innerHTML = '<p class="text-center">No confirmed bookings found.</p>';
+          return;
+        }
+        
+        querySnapshot.forEach((doc) => {
+          const booking = doc.data();
+          const bookingCard = document.createElement('div');
+          bookingCard.className = 'event-card animate-card';
+          bookingCard.innerHTML = `
+            <h2 class="text-xl">${booking.name}</h2>
+            <p>Chief Guest: ${booking.chief_guest}</p>
+            <p>Date: ${booking.date}</p>
+            <p>Time: ${booking.time}</p>
+            <p>Venue: ${booking.venue}</p>
+            <p>Club: ${booking.club}</p>
+            <p>Audience Limit: ${booking.audience_limit}</p>
+          `;
+          bookingsContainer.appendChild(bookingCard);
+        });
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        document.getElementById('bookings-container').innerHTML = '<p class="text-center text-red-400">Error loading bookings.</p>';
+      }
+    }
+
+    // Logout
     document.getElementById('logout').addEventListener('click', async () => {
       try {
         await signOut(auth);
