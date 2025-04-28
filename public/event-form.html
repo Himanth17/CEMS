@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plan Event - EventSphere</title>
+    <title>Plan Event</title>
     <link
       rel="icon"
       type="image/svg+xml"
@@ -21,11 +21,11 @@
   </head>
   <body>
     <nav class="navbar">
-      <a href="index.html">EventSphere</a>
+      <a href="index.html">CEMS</a>
       <div class="flex gap-4">
         <a href="student-login.html">Student Portal</a>
         <a href="faculty-login.html">Faculty Portal</a>
-        <button class="theme-toggle">🌙</button>
+        <button class="theme-toggle"></button>
         <button id="logout" class="btn-secondary">Logout</button>
       </div>
     </nav>
@@ -104,10 +104,11 @@
       <a href="contact.html" class="footer-link">Contact</a>
       <a href="highlights.html" class="footer-link">Previous Event Highlights</a>
     </footer>
+    <script src="js/email-service.js"></script>
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
       import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
-      import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+      import { getFirestore, collection, addDoc, getDoc, doc } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
 
       const firebaseConfig = {
         apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
@@ -122,6 +123,16 @@
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
+
+      // Initialize email service
+      window.addEventListener('DOMContentLoaded', async () => {
+        try {
+          const emailServiceInitialized = await EmailService.init();
+          console.log('Email service initialized:', emailServiceInitialized);
+        } catch (error) {
+          console.warn('Failed to initialize email service:', error);
+        }
+      });
 
       // Check auth state
       onAuthStateChanged(auth, (user) => {
@@ -169,21 +180,55 @@
           if (!user) {
             throw new Error('User not authenticated. Please log in again.');
           }
+
+          // Update status
+          document.getElementById('status').innerText = 'Processing your booking...';
+
           // Save to Firestore
           const bookingData = {
             ...formData,
             bookedAt: new Date().toISOString(),
             status: "confirmed",
-            userId: user.uid
+            userId: user.uid,
+            userEmail: user.email,
+            userName: user.displayName || user.email
           };
-          await addDoc(collection(db, "bookings"), bookingData);
-          
+
+          const docRef = await addDoc(collection(db, "bookings"), bookingData);
+          console.log("Document written with ID: ", docRef.id);
+
+          // Send confirmation email
+          try {
+            const recipient = {
+              email: user.email,
+              fullname: user.displayName || user.email
+            };
+
+            console.log('Sending event confirmation email to:', recipient);
+            const emailResult = await EmailService.sendEventConfirmation(formData, recipient);
+            console.log('Email result:', emailResult);
+
+            if (emailResult && emailResult.success) {
+              console.log('Confirmation email sent successfully');
+            } else {
+              console.warn('Failed to send confirmation email:', emailResult);
+            }
+          } catch (emailError) {
+            console.error('Error sending confirmation email:', emailError);
+            // Continue with booking process even if email fails
+          }
+
           // Clear localStorage
           localStorage.removeItem('event-form-data');
-          
+
           // Update UI
           document.getElementById('status').innerText = 'Booking Confirmed! View details on your dashboard.';
           document.getElementById('pay-button').classList.add('hidden');
+
+          // Redirect to success page after a short delay
+          setTimeout(() => {
+            window.location.href = 'success.html';
+          }, 2000);
         } catch (error) {
           console.error("Error confirming booking:", error.message, error.stack);
           document.getElementById("status").innerText = `Error confirming booking: ${error.message}`;

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Email - CEMS</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235b21b6'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-12a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'/%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Futura&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html">CEMS</a>
+    <div class="flex gap-4">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="event-form.html">Plan Your Event</a>
+      <button class="theme-toggle">🌙</button>
+    </div>
+  </nav>
+  <div id="particles"></div>
+  <div class="container py-12">
+    <div class="mb-6 animate-card">
+      <h1 class="text-2xl">Test Email Functionality</h1>
+      <p class="mt-4">Use this page to test the email functionality of the College Event Management System.</p>
+    </div>
+    
+    <div class="form-container animate-card">
+      <h2 class="text-xl mb-6">Send Test Email</h2>
+      <div class="mb-4">
+        <label for="email" class="block mb-2">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+      </div>
+      <button id="test-email-btn" class="btn-primary w-full">Send Test Email</button>
+      <p id="status" class="mt-4 text-center"></p>
+    </div>
+    
+    <div class="form-container animate-card mt-6">
+      <h2 class="text-xl mb-6">Test Event Emails</h2>
+      
+      <div class="mb-4">
+        <label for="recipient-email" class="block mb-2">Recipient Email</label>
+        <input type="email" id="recipient-email" placeholder="Enter recipient email" required>
+      </div>
+      
+      <div class="mb-4">
+        <label for="recipient-name" class="block mb-2">Recipient Name</label>
+        <input type="text" id="recipient-name" placeholder="Enter recipient name" required>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <button id="confirmation-btn" class="btn-secondary">Test Confirmation</button>
+        <button id="reminder-btn" class="btn-secondary">Test Reminder</button>
+        <button id="update-btn" class="btn-secondary">Test Update</button>
+        <button id="cancellation-btn" class="btn-secondary">Test Cancellation</button>
+      </div>
+      
+      <p id="event-status" class="mt-4 text-center"></p>
+    </div>
+  </div>
+  
+  <footer>
+    <a href="about.html" class="footer-link">About</a>
+    <a href="contact.html" class="footer-link">Contact</a>
+    <a href="highlights.html" class="footer-link">Previous Event Highlights</a>
+  </footer>
+  
+  <script src="js/email-service.js"></script>
+  <script>
+    // Initialize email service
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const emailServiceInitialized = await EmailService.init();
+        console.log('Email service initialized:', emailServiceInitialized);
+        
+        if (emailServiceInitialized) {
+          document.getElementById('status').textContent = 'Email service is ready.';
+        } else {
+          document.getElementById('status').textContent = 'Email service is not available. Make sure the email server is running.';
+        }
+      } catch (error) {
+        console.warn('Failed to initialize email service:', error);
+        document.getElementById('status').textContent = 'Failed to initialize email service. Check console for details.';
+      }
+    });
+    
+    // Test email button
+    document.getElementById('test-email-btn').addEventListener('click', async () => {
+      const emailInput = document.getElementById('email');
+      const statusElement = document.getElementById('status');
+      
+      if (!emailInput.value) {
+        statusElement.textContent = 'Please enter an email address.';
+        return;
+      }
+      
+      try {
+        statusElement.textContent = 'Sending test email...';
+        document.getElementById('test-email-btn').disabled = true;
+        
+        const result = await EmailService.sendTestEmail(emailInput.value);
+        
+        if (result && result.success) {
+          statusElement.textContent = 'Test email sent successfully! Check your inbox.';
+        } else {
+          statusElement.textContent = 'Failed to send test email. Check console for details.';
+          console.error('Test email error:', result);
+        }
+      } catch (error) {
+        console.error('Error sending test email:', error);
+        statusElement.textContent = 'Error sending test email: ' + error.message;
+      } finally {
+        document.getElementById('test-email-btn').disabled = false;
+      }
+    });
+    
+    // Sample event data for testing
+    const sampleEvent = {
+      name: "Tech Conference 2024",
+      date: "2024-06-15",
+      time: "10:00",
+      venue: "Auditorium",
+      chief_guest: "Dr. Jane Smith",
+      audience_limit: "150",
+      club: "GDG"
+    };
+    
+    // Test event confirmation button
+    document.getElementById('confirmation-btn').addEventListener('click', async () => {
+      await sendEventEmail('confirmation');
+    });
+    
+    // Test event reminder button
+    document.getElementById('reminder-btn').addEventListener('click', async () => {
+      await sendEventEmail('reminder');
+    });
+    
+    // Test event update button
+    document.getElementById('update-btn').addEventListener('click', async () => {
+      await sendEventEmail('update');
+    });
+    
+    // Test event cancellation button
+    document.getElementById('cancellation-btn').addEventListener('click', async () => {
+      await sendEventEmail('cancellation');
+    });
+    
+    // Helper function to send event emails
+    async function sendEventEmail(type) {
+      const recipientEmail = document.getElementById('recipient-email').value;
+      const recipientName = document.getElementById('recipient-name').value;
+      const statusElement = document.getElementById('event-status');
+      
+      if (!recipientEmail || !recipientName) {
+        statusElement.textContent = 'Please enter recipient email and name.';
+        return;
+      }
+      
+      const recipient = {
+        email: recipientEmail,
+        fullname: recipientName
+      };
+      
+      try {
+        statusElement.textContent = `Sending ${type} email...`;
+        
+        // Disable all buttons
+        document.querySelectorAll('.form-container button').forEach(btn => {
+          btn.disabled = true;
+        });
+        
+        let result;
+        
+        switch (type) {
+          case 'confirmation':
+            result = await EmailService.sendEventConfirmation(sampleEvent, recipient);
+            break;
+          case 'reminder':
+            result = await EmailService.sendEventReminder(sampleEvent, recipient);
+            break;
+          case 'update':
+            result = await EmailService.sendEventUpdate(sampleEvent, recipient);
+            break;
+          case 'cancellation':
+            result = await EmailService.sendEventCancellation(sampleEvent, recipient);
+            break;
+        }
+        
+        if (result && result.success) {
+          statusElement.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} email sent successfully! Check the recipient's inbox.`;
+        } else {
+          statusElement.textContent = `Failed to send ${type} email. Check console for details.`;
+          console.error(`${type} email error:`, result);
+        }
+      } catch (error) {
+        console.error(`Error sending ${type} email:`, error);
+        statusElement.textContent = `Error sending ${type} email: ${error.message}`;
+      } finally {
+        // Re-enable all buttons
+        document.querySelectorAll('.form-container button').forEach(btn => {
+          btn.disabled = false;
+        });
+      }
+    }
+  </script>
+  <script src="scripts.js"></script>
+</body>
+</html>

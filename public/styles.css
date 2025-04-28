@@ -132,6 +132,7 @@ h2 {
   font-weight: 700;
   text-transform: uppercase;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .btn-primary {
@@ -155,6 +156,20 @@ h2 {
   background: var(--accent);
   color: var(--bg-dark);
   transform: translateY(-2px);
+}
+
+/* Small buttons */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Button states */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .ripple {

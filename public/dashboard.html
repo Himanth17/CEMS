@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - EventSphere</title>
+  <title>CEMS</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235b21b6'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-12a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'/%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Futura&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
@@ -11,12 +11,12 @@
 </head>
 <body>
   <nav class="navbar">
-    <a href="index.html">EventSphere</a>
+    <a href="index.html">CEMS</a>
     <div class="flex gap-4">
       <a href="student-login.html">Student Portal</a>
       <a href="faculty-login.html">Faculty Portal</a>
       <a href="event-form.html">Plan Your Event</a>
-      <button class="theme-toggle">🌙</button>
+      <button class="theme-toggle"></button>
       <button id="logout" class="btn-secondary">Logout</button>
     </div>
   </nav>
@@ -81,10 +81,10 @@
       <a class="footer-link">About</a>
       <div class="tooltip-box">
         <p><strong>IFHE (ICFAI FOUNDATION FOR HIGHER EDUCATION)</strong></p>
-        <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. The institution was founded by N. J. Yasaswy, Besant C. Raj and Dr. Prasanna Chandra, the Director of Centre for Financial Management. Donthanpalle, Telangana 501203.</p>
+        <p>The Institute of Chartered Financial Analysts of India (ICFAI) was established in 1984 as a non-profit educational society in Hyderabad, Telangana, India. The institution has been offering education to students across India through its various programs in the field of higher education. Donthanpalle, Telangana 501203.</p>
       </div>
     </div>
-  
+
     <!-- Contact -->
     <div style="display: inline-block; position: relative;">
       <a class="footer-link">Contact</a>
@@ -97,10 +97,26 @@
     </div>
   </footer>
 
+  <!-- Bulk Import Modal -->
+  <div id="bulk-import-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.8); z-index: 1000;">
+    <div class="modal-content" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); margin: 10% auto; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 600px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); color: #e2e8f0; border: 1px solid #5b21b6;">
+      <span class="close-modal" style="float: right; cursor: pointer; font-size: 24px; color: #d946ef;">&times;</span>
+      <h2 style="font-size: 1.5rem; margin-bottom: 1rem; background: linear-gradient(to right, #5b21b6, #d946ef); -webkit-background-clip: text; background-clip: text; color: transparent;">Bulk Import Recipients</h2>
+      <p style="margin-bottom: 1rem;">Enter email addresses (one per line or comma-separated):</p>
+      <textarea id="bulk-emails" rows="10" style="width: 100%; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.1); border: 1px solid #d946ef; border-radius: 0.5rem; color: #e2e8f0; font-size: 1rem;"></textarea>
+      <input type="hidden" id="bulk-import-event-id">
+      <div style="text-align: right; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button id="cancel-import" class="btn-secondary">Cancel</button>
+        <button id="confirm-import" class="btn-primary">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/email-service.js"></script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
     import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
-    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+    import { getFirestore, collection, query, where, getDocs, updateDoc, doc, deleteDoc, addDoc } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBYEWxN1v0qeBLzuWLRCuKgiviuSP37jPI",
@@ -116,13 +132,23 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Initialize email service
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const emailServiceInitialized = await EmailService.init();
+        console.log('Email service initialized:', emailServiceInitialized);
+      } catch (error) {
+        console.warn('Failed to initialize email service:', error);
+      }
+    });
+
     // Check auth state and display user info
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
         document.getElementById('user-info').textContent = userData.email || user.email || 'User';
         document.getElementById('user-role').textContent = userData.role || 'Unknown';
-        
+
         // Fetch and display bookings
         fetchBookings(user.uid);
       } else {
@@ -135,19 +161,30 @@
       try {
         const bookingsContainer = document.getElementById('bookings-container');
         bookingsContainer.innerHTML = ''; // Clear existing content
-        
+
         const q = query(collection(db, 'bookings'), where('userId', '==', userId), where('status', '==', 'confirmed'));
         const querySnapshot = await getDocs(q);
-        
+
         if (querySnapshot.empty) {
           bookingsContainer.innerHTML = '<p class="text-center">No confirmed bookings found.</p>';
           return;
         }
-        
+
         querySnapshot.forEach((doc) => {
           const booking = doc.data();
           const bookingCard = document.createElement('div');
           bookingCard.className = 'event-card animate-card';
+          bookingCard.id = `event-card-${doc.id}`;
+
+          // Create action buttons
+          const actionButtons = `
+            <div class="flex gap-2 mt-4">
+              <button class="btn-secondary btn-sm send-reminder" data-id="${doc.id}">Send Reminder</button>
+              <button class="btn-secondary btn-sm update-event" data-id="${doc.id}">Update</button>
+              <button class="btn-secondary btn-sm cancel-event" data-id="${doc.id}">Cancel</button>
+            </div>
+          `;
+
           bookingCard.innerHTML = `
             <h2 class="text-xl">${booking.name}</h2>
             <p>Chief Guest: ${booking.chief_guest}</p>
@@ -156,13 +193,429 @@
             <p>Venue: ${booking.venue}</p>
             <p>Club: ${booking.club}</p>
             <p>Audience Limit: ${booking.audience_limit}</p>
+            ${actionButtons}
+
+            <div class="mt-4 border-t pt-4">
+              <h3 class="text-lg">Email Recipients</h3>
+              <div class="recipients-list" id="recipients-list-${doc.id}">
+                <p>Loading recipients...</p>
+              </div>
+              <div class="flex gap-2 mt-2">
+                <input type="email" id="new-recipient-${doc.id}" placeholder="Enter email" class="flex-grow">
+                <button class="btn-secondary btn-sm add-recipient" data-id="${doc.id}">Add</button>
+                <button class="btn-secondary btn-sm bulk-import" data-id="${doc.id}">Bulk Import</button>
+              </div>
+            </div>
           `;
+
           bookingsContainer.appendChild(bookingCard);
+
+          // Add event listeners for the buttons
+          const sendReminderBtn = bookingCard.querySelector('.send-reminder');
+          const updateEventBtn = bookingCard.querySelector('.update-event');
+          const cancelEventBtn = bookingCard.querySelector('.cancel-event');
+
+          // Send reminder button
+          sendReminderBtn.addEventListener('click', async () => {
+            try {
+              const user = auth.currentUser;
+              if (!user) {
+                alert('You must be logged in to send reminders.');
+                return;
+              }
+
+              // Get the event ID
+              const eventId = doc.id;
+
+              // Add the current user as a recipient
+              const recipients = [{
+                email: user.email,
+                fullname: user.displayName || user.email
+              }];
+
+              // Fetch additional recipients from Firebase
+              const recipientsSnapshot = await getDocs(
+                query(collection(db, 'recipients'), where('eventId', '==', eventId))
+              );
+
+              if (!recipientsSnapshot.empty) {
+                const recipientsData = recipientsSnapshot.docs[0].data();
+                if (recipientsData.emails && Array.isArray(recipientsData.emails)) {
+                  recipients.push(...recipientsData.emails);
+                }
+              }
+
+              // Show loading state
+              sendReminderBtn.textContent = 'Sending...';
+              sendReminderBtn.disabled = true;
+
+              // Send reminder email to all recipients
+              const emailResult = await EmailService.sendEventReminder(booking, recipients);
+
+              if (emailResult && emailResult.success) {
+                alert(`Reminder emails sent successfully to ${recipients.length} recipients!`);
+              } else {
+                alert('Failed to send reminder emails. Please try again later.');
+                console.warn('Failed to send reminder emails:', emailResult);
+              }
+            } catch (error) {
+              console.error('Error sending reminder:', error);
+              alert('Error sending reminder: ' + error.message);
+            } finally {
+              // Reset button state
+              sendReminderBtn.textContent = 'Send Reminder';
+              sendReminderBtn.disabled = false;
+            }
+          });
+
+          // Update event button
+          updateEventBtn.addEventListener('click', () => {
+            // For now, just redirect to event form
+            // In a real implementation, you would pre-fill the form with existing data
+            window.location.href = 'event-form.html';
+          });
+
+          // Cancel event button
+          cancelEventBtn.addEventListener('click', async () => {
+            try {
+              if (!confirm('Are you sure you want to cancel this event?')) {
+                return;
+              }
+
+              const user = auth.currentUser;
+              if (!user) {
+                alert('You must be logged in to cancel events.');
+                return;
+              }
+
+              // Show loading state
+              cancelEventBtn.textContent = 'Cancelling...';
+              cancelEventBtn.disabled = true;
+
+              // Update the booking status in Firestore
+              await updateDoc(doc(db, 'bookings', doc.id), {
+                status: 'cancelled',
+                cancelledAt: new Date().toISOString()
+              });
+
+              // Get the event ID
+              const eventId = doc.id;
+
+              // Add the current user as a recipient
+              const recipients = [{
+                email: user.email,
+                fullname: user.displayName || user.email
+              }];
+
+              // Fetch additional recipients from Firebase
+              const recipientsSnapshot = await getDocs(
+                query(collection(db, 'recipients'), where('eventId', '==', eventId))
+              );
+
+              if (!recipientsSnapshot.empty) {
+                const recipientsData = recipientsSnapshot.docs[0].data();
+                if (recipientsData.emails && Array.isArray(recipientsData.emails)) {
+                  recipients.push(...recipientsData.emails);
+                }
+              }
+
+              // Send cancellation email to all recipients
+              const emailResult = await EmailService.sendEventCancellation(booking, recipients);
+
+              if (emailResult && emailResult.success) {
+                console.log('Cancellation email sent successfully');
+              } else {
+                console.warn('Failed to send cancellation email:', emailResult);
+              }
+
+              // Remove the card from the UI
+              bookingCard.remove();
+
+              // Check if there are any remaining bookings
+              if (bookingsContainer.children.length === 0) {
+                bookingsContainer.innerHTML = '<p class="text-center">No confirmed bookings found.</p>';
+              }
+
+              alert('Event cancelled successfully!');
+            } catch (error) {
+              console.error('Error cancelling event:', error);
+              alert('Error cancelling event: ' + error.message);
+
+              // Reset button state
+              cancelEventBtn.textContent = 'Cancel';
+              cancelEventBtn.disabled = false;
+            }
+          });
         });
+
+        // Load recipients for all events after bookings are loaded
+        loadAllRecipients();
       } catch (error) {
         console.error('Error fetching bookings:', error);
         document.getElementById('bookings-container').innerHTML = '<p class="text-center text-red-400">Error loading bookings.</p>';
       }
+    }
+
+    // Function to load recipients for an event
+    async function loadRecipients(eventId) {
+      const listElement = document.getElementById(`recipients-list-${eventId}`);
+      if (!listElement) return; // Element might not exist yet
+
+      listElement.innerHTML = '<p>Loading recipients...</p>';
+
+      try {
+        const q = query(collection(db, 'recipients'), where('eventId', '==', eventId));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          listElement.innerHTML = '<p>No additional recipients.</p>';
+          return;
+        }
+
+        const docData = querySnapshot.docs[0].data();
+        if (!docData.emails || docData.emails.length === 0) {
+          listElement.innerHTML = '<p>No additional recipients.</p>';
+          return;
+        }
+
+        // Create list of recipients
+        const recipientsList = document.createElement('ul');
+        recipientsList.className = 'mt-2';
+
+        docData.emails.forEach(recipient => {
+          const item = document.createElement('li');
+          item.className = 'flex justify-between items-center mb-1';
+          item.innerHTML = `
+            <span>${recipient.email}</span>
+            <button class="text-red-500 remove-recipient" data-id="${eventId}" data-email="${recipient.email}">✕</button>
+          `;
+          recipientsList.appendChild(item);
+        });
+
+        listElement.innerHTML = '';
+        listElement.appendChild(recipientsList);
+
+        // Add event listeners for remove buttons
+        const removeButtons = listElement.querySelectorAll('.remove-recipient');
+        removeButtons.forEach(btn => {
+          btn.addEventListener('click', removeRecipient);
+        });
+
+      } catch (error) {
+        console.error('Error loading recipients:', error);
+        listElement.innerHTML = '<p class="text-red-500">Error loading recipients.</p>';
+      }
+    }
+
+    // Function to remove a recipient
+    async function removeRecipient(e) {
+      const eventId = e.target.dataset.id;
+      const email = e.target.dataset.email;
+
+      if (!confirm(`Remove ${email} from recipients?`)) {
+        return;
+      }
+
+      try {
+        const q = query(collection(db, 'recipients'), where('eventId', '==', eventId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const docRef = querySnapshot.docs[0].ref;
+          const docData = querySnapshot.docs[0].data();
+
+          // Filter out the email to remove
+          const updatedEmails = (docData.emails || []).filter(r => r.email !== email);
+          await updateDoc(docRef, { emails: updatedEmails });
+
+          // Refresh the list
+          loadRecipients(eventId);
+        }
+      } catch (error) {
+        console.error('Error removing recipient:', error);
+        alert('Error removing recipient: ' + error.message);
+      }
+    }
+
+    // Function to add event listeners for add recipient buttons
+    function setupAddRecipientButtons() {
+      const addRecipientBtns = document.querySelectorAll('.add-recipient');
+      addRecipientBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const eventId = btn.dataset.id;
+          const emailInput = document.getElementById(`new-recipient-${eventId}`);
+          const email = emailInput.value.trim();
+
+          if (!email) {
+            alert('Please enter an email address.');
+            return;
+          }
+
+          try {
+            // Check if recipients document exists
+            const recipientsRef = collection(db, 'recipients');
+            const q = query(recipientsRef, where('eventId', '==', eventId));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+              // Create new recipients document
+              await addDoc(recipientsRef, {
+                eventId: eventId,
+                emails: [{ email: email, fullname: email }]
+              });
+            } else {
+              // Update existing recipients document
+              const docRef = querySnapshot.docs[0].ref;
+              const docData = querySnapshot.docs[0].data();
+
+              // Check if email already exists
+              if (docData.emails && docData.emails.some(r => r.email === email)) {
+                alert('This email is already in the recipients list.');
+                return;
+              }
+
+              // Add new email to the list
+              const updatedEmails = [...(docData.emails || []), { email: email, fullname: email }];
+              await updateDoc(docRef, { emails: updatedEmails });
+            }
+
+            // Clear input and refresh list
+            emailInput.value = '';
+            loadRecipients(eventId);
+
+          } catch (error) {
+            console.error('Error adding recipient:', error);
+            alert('Error adding recipient: ' + error.message);
+          }
+        });
+      });
+    }
+
+    // Setup bulk import functionality
+    function setupBulkImport() {
+      const modal = document.getElementById('bulk-import-modal');
+      const closeBtn = document.querySelector('.close-modal');
+      const cancelBtn = document.getElementById('cancel-import');
+      const confirmBtn = document.getElementById('confirm-import');
+      const bulkEmailsTextarea = document.getElementById('bulk-emails');
+      const eventIdInput = document.getElementById('bulk-import-event-id');
+
+      // Close modal functions
+      function closeModal() {
+        modal.style.display = 'none';
+        bulkEmailsTextarea.value = '';
+        eventIdInput.value = '';
+      }
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Setup bulk import buttons
+      const bulkImportBtns = document.querySelectorAll('.bulk-import');
+      bulkImportBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const eventId = btn.dataset.id;
+          eventIdInput.value = eventId;
+          modal.style.display = 'block';
+        });
+      });
+
+      // Handle import confirmation
+      confirmBtn.addEventListener('click', async () => {
+        const eventId = eventIdInput.value;
+        const emailText = bulkEmailsTextarea.value.trim();
+
+        if (!emailText) {
+          alert('Please enter at least one email address.');
+          return;
+        }
+
+        // Split by commas or newlines and trim each email
+        const emails = emailText.split(/[\s,]+/)
+          .map(email => email.trim())
+          .filter(email => email && email.includes('@'));
+
+        if (emails.length === 0) {
+          alert('Please enter valid email addresses.');
+          return;
+        }
+
+        try {
+          // Check if recipients document exists
+          const recipientsRef = collection(db, 'recipients');
+          const q = query(recipientsRef, where('eventId', '==', eventId));
+          const querySnapshot = await getDocs(q);
+
+          // Get existing emails to check for duplicates
+          let existingEmails = [];
+          let docRef = null;
+          let docData = null;
+
+          if (!querySnapshot.empty) {
+            docRef = querySnapshot.docs[0].ref;
+            docData = querySnapshot.docs[0].data();
+            existingEmails = (docData.emails || []).map(r => r.email);
+          }
+
+          // Filter out duplicates
+          const newEmails = emails.filter(email => !existingEmails.includes(email));
+
+          if (newEmails.length === 0) {
+            alert('All these emails are already in the recipients list.');
+            return;
+          }
+
+          // Convert to recipient objects
+          const newRecipients = newEmails.map(email => ({ email, fullname: email }));
+
+          if (querySnapshot.empty) {
+            // Create new recipients document
+            await addDoc(recipientsRef, {
+              eventId: eventId,
+              emails: newRecipients
+            });
+          } else {
+            // Update existing recipients document
+            const updatedEmails = [...(docData.emails || []), ...newRecipients];
+            await updateDoc(docRef, { emails: updatedEmails });
+          }
+
+          // Close modal and refresh list
+          closeModal();
+          loadRecipients(eventId);
+
+          alert(`Added ${newRecipients.length} new recipients.`);
+
+        } catch (error) {
+          console.error('Error adding recipients:', error);
+          alert('Error adding recipients: ' + error.message);
+        }
+      });
+    }
+
+    // Load recipients for all events when the page loads
+    function loadAllRecipients() {
+      const eventCards = document.querySelectorAll('.event-card');
+      eventCards.forEach(card => {
+        const buttons = card.querySelectorAll('[data-id]');
+        if (buttons.length > 0) {
+          const eventId = buttons[0].dataset.id;
+          loadRecipients(eventId);
+        }
+      });
+
+      // Setup add recipient buttons
+      setupAddRecipientButtons();
+
+      // Setup bulk import functionality
+      setupBulkImport();
     }
 
     // Logout
